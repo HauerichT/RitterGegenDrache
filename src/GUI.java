@@ -20,16 +20,10 @@ public class GUI extends JFrame implements ActionListener {
     Ritter ritter;
     boolean turnRitter;
     boolean spielzugAktiv;
+    int diceResult;
     ArrayList<Object> kacheln;
 
     public GUI() {
-
-        // Ritter
-        ritter = new Ritter();
-
-        // Drache
-        drache = new Drache();
-
         // Turn
         turnRitter = true;
 
@@ -43,6 +37,14 @@ public class GUI extends JFrame implements ActionListener {
             Kachel akt = (Kachel) kacheln.get(i);
             akt.addActionListener(this);
         }
+
+        // Ritter
+        ritter = new Ritter();
+        ritter.setAktKachel((Kachel) kacheln.get(0));
+
+        // Drache
+        drache = new Drache();
+        drache.setAktKachel((Kachel) kacheln.get(48));
 
         // JPanels für die einzelnen Elemente der rechten Seite erzeugen
         panelRechteSeite = new JPanel();
@@ -101,7 +103,28 @@ public class GUI extends JFrame implements ActionListener {
         this.add(panelRechteSeite, BorderLayout.EAST);
     }
 
-    public void spielzugMachen(Kachel kachel) {
+    public void changeStrength(Kachel kachel) {
+        if (turnRitter) {
+            if (kachel.getBackground() == Color.RED) {
+                this.ritter.spielstaerkeVerringern();
+            }
+            else if (kachel.getBackground() == Color.GREEN) {
+                this.ritter.spielstaerkeErhoehen();
+            }
+            this.txtRitterPunkte.setText("Spielstärke: " + ritter.getSpielstaerke());
+        }
+        else {
+            if (kachel.getBackground() == Color.RED) {
+                this.drache.spielstaerkeErhoehen();
+            }
+            else if (kachel.getBackground() == Color.GREEN) {
+                this.drache.spielstaerkeVerringern();
+            }
+            this.txtDrachePunkte.setText("Spielstärke: " + drache.getSpielstaerke());
+        }
+    }
+
+    public void setPlayer(Kachel kachel) {
         if (turnRitter) {
             for (int i = 0; i < kacheln.size(); i++) {
                 Kachel temp = (Kachel) kacheln.get(i);
@@ -109,19 +132,9 @@ public class GUI extends JFrame implements ActionListener {
                     temp.setText("");
                 }
             }
-
-            if (kachel.getBackground() == Color.RED) {
-                this.ritter.spielstaerkeVerringern();
-            }
-            else if (kachel.getBackground() == Color.GREEN) {
-                this.ritter.spielstaerkeErhoehen();
-            }
-
             kachel.setRitter();
+            ritter.setAktKachel(kachel);
             txtInformationen.setText("Der Drache ist dran!");
-            txtRitterPunkte.setText("Spielstärke: " + ritter.getSpielstaerke());
-            this.turnRitter = false;
-
         }
         else {
             for (int i = 0; i < kacheln.size(); i++) {
@@ -130,40 +143,96 @@ public class GUI extends JFrame implements ActionListener {
                     temp.setText("");
                 }
             }
-
-            if (kachel.getBackground() == Color.RED) {
-                this.drache.spielstaerkeErhoehen();
-            }
-            else if (kachel.getBackground() == Color.GREEN) {
-                this.drache.spielstaerkeVerringern();
-            }
-
             kachel.setDrache();
+            drache.setAktKachel(kachel);
             txtInformationen.setText("Der Ritter ist dran!");
-            txtDrachePunkte.setText("Spielstärke: " + drache.getSpielstaerke());
-            this.turnRitter = true;
-
         }
-        this.btnAktion.setEnabled(true);
-        this.spielzugAktiv = false;
     }
 
+    public void makeMove(Kachel kachel) {
+        if (checkStep(kachel)) {
+            setPlayer(kachel);
+            if (ritter.getAktKachel() == drache.getAktKachel()) {
+                endGame(kachel);
+            }
+            else {
+                changeStrength(kachel);
+                this.btnAktion.setEnabled(true);
+                this.txtErgebnis.setText("Ergebnis: -");
+                this.spielzugAktiv = false;
+                this.turnRitter = !turnRitter;
+            }
+        }
+        else {
+            txtInformationen.setText("Feld nicht auswählbar!");
+        }
+    }
+
+    private void endGame(Kachel kachel) {
+        kachel.setText("X");
+        txtErgebnis.setText("Ergebnis: -");
+        if (ritter.getSpielstaerke() > drache.getSpielstaerke()) {
+            txtInformationen.setText("Der Ritter gewinnt!");
+        }
+        else if (ritter.getSpielstaerke() < drache.getSpielstaerke()) {
+            txtInformationen.setText("Der Drache gewinnt!");
+        }
+        else {
+            txtInformationen.setText("Das Spiel endet unentschieden!");
+        }
+    }
+
+    public void rollTheDice() {
+        this.btnAktion.setEnabled(false);
+        this.diceResult = ThreadLocalRandom.current().nextInt(1, 3 + 1);
+        this.txtErgebnis.setText("Ergebnis: " + diceResult);
+        this.spielzugAktiv = true;
+    }
+
+    public boolean checkStep(Kachel kachel) {
+        Kachel aktKachelRitter = ritter.getAktKachel();
+        Kachel aktKachelDrache = drache.getAktKachel();
+        if (turnRitter) {
+            if (kachel != aktKachelRitter && kachel != kacheln.get(0) && kachel != kacheln.get(48)) {
+                if ((kachel.getXvalue() > aktKachelRitter.getXvalue()+diceResult) || (kachel.getXvalue() < aktKachelRitter.getXvalue()-diceResult)) {
+                    return false;
+                }
+                else if ((kachel.getYvalue() > aktKachelRitter.getYvalue()+diceResult) || (kachel.getYvalue() < aktKachelRitter.getYvalue()-diceResult)) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+        }
+        else {
+            if (kachel != aktKachelDrache && kachel != kacheln.get(0) && kachel != kacheln.get(48)) {
+                if ((kachel.getXvalue() > aktKachelDrache.getXvalue()+diceResult) || (kachel.getXvalue() < aktKachelDrache.getXvalue()-diceResult)) {
+                    return false;
+                }
+                else if ((kachel.getYvalue() > aktKachelDrache.getYvalue()+diceResult) || (kachel.getYvalue() < aktKachelDrache.getYvalue()-diceResult)) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnAktion) {
-            this.btnAktion.setEnabled(false);
-            int ergebnis = ThreadLocalRandom.current().nextInt(1, 3 + 1);
-            this.txtErgebnis.setText("Ergebnis: " + ergebnis);
-            this.spielzugAktiv = true;
+            rollTheDice();
         }
 
         if (spielzugAktiv) {
             for (int i = 0; i < kacheln.size(); i++) {
                 if (e.getSource() == kacheln.get(i)) {
                     Kachel temp = (Kachel) kacheln.get(i);
-                    spielzugMachen(temp);
+                    makeMove(temp);
                 }
             }
         }

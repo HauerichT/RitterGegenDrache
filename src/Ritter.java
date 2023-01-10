@@ -5,11 +5,12 @@ public class Ritter {
     private int geschwindigkeit;
     private int intelligenz;
     private int spielstaerke;
+    Kachel aktKachel;
 
     Ritter() {
         this.geschwindigkeit = ThreadLocalRandom.current().nextInt(6, 8 + 1);
         this.intelligenz = ThreadLocalRandom.current().nextInt(6, 8 + 1);
-        this.spielstaerke =  (int) Math.ceil((this.geschwindigkeit + this.intelligenz * 2) * ThreadLocalRandom.current().nextDouble(0.2, 1.2 + 1));
+        this.spielstaerke = (int) ((2 * this.geschwindigkeit + this.intelligenz) * ThreadLocalRandom.current().nextDouble(0.8, 1.2));;
     }
 
     public int getSpielstaerke() {
@@ -17,10 +18,18 @@ public class Ritter {
     }
 
     public void spielstaerkeErhoehen() {
-        this.spielstaerke = (int) (this.spielstaerke * 1.10);
+        spielstaerke = (int) (spielstaerke * 1.10);
     }
 
     public void spielstaerkeVerringern() {
-        this.spielstaerke = (int) (this.spielstaerke - (this.spielstaerke * 0.10));
+        spielstaerke = (int) (spielstaerke * 0.9);
+    }
+
+    public void setAktKachel(Kachel kachel) {
+        this.aktKachel = kachel;
+    }
+
+    public Kachel getAktKachel() {
+        return this.aktKachel;
     }
 }
