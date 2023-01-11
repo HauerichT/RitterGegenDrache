@@ -152,11 +152,11 @@ public class GUI extends JFrame implements ActionListener {
     public void makeMove(Kachel kachel) {
         if (checkStep(kachel)) {
             setPlayer(kachel);
+            changeStrength(kachel);
             if (ritter.getAktKachel() == drache.getAktKachel()) {
                 endGame(kachel);
             }
             else {
-                changeStrength(kachel);
                 this.btnAktion.setEnabled(true);
                 this.txtErgebnis.setText("Ergebnis: -");
                 this.spielzugAktiv = false;
@@ -197,12 +197,7 @@ public class GUI extends JFrame implements ActionListener {
                 if ((kachel.getXvalue() > aktKachelRitter.getXvalue()+diceResult) || (kachel.getXvalue() < aktKachelRitter.getXvalue()-diceResult)) {
                     return false;
                 }
-                else if ((kachel.getYvalue() > aktKachelRitter.getYvalue()+diceResult) || (kachel.getYvalue() < aktKachelRitter.getYvalue()-diceResult)) {
-                    return false;
-                }
-                else {
-                    return true;
-                }
+                else return (kachel.getYvalue() <= aktKachelRitter.getYvalue() + diceResult) && (kachel.getYvalue() >= aktKachelRitter.getYvalue() - diceResult);
             }
         }
         else {
@@ -210,12 +205,7 @@ public class GUI extends JFrame implements ActionListener {
                 if ((kachel.getXvalue() > aktKachelDrache.getXvalue()+diceResult) || (kachel.getXvalue() < aktKachelDrache.getXvalue()-diceResult)) {
                     return false;
                 }
-                else if ((kachel.getYvalue() > aktKachelDrache.getYvalue()+diceResult) || (kachel.getYvalue() < aktKachelDrache.getYvalue()-diceResult)) {
-                    return false;
-                }
-                else {
-                    return true;
-                }
+                else return (kachel.getYvalue() <= aktKachelDrache.getYvalue() + diceResult) && (kachel.getYvalue() >= aktKachelDrache.getYvalue() - diceResult);
             }
         }
         return false;
