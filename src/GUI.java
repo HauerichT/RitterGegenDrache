@@ -233,6 +233,8 @@ public class GUI extends JFrame implements ActionListener {
         else {
             txtInformation.setText("Das Spiel endet unentschieden!");
         }
+        this.turnActive = false;
+
     }
 
     // ActionListener
