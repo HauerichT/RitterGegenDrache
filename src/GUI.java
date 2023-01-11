@@ -4,225 +4,250 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GUI extends JFrame implements ActionListener {
 
-    JPanel panelRechteSeite, panelDrache, panelRitter, panelInformationen, panelAktion;
-    JLabel txtRitterPunkte;
-    JLabel txtDrachePunkte;
-    JLabel txtInformationen;
-    JLabel txtErgebnis;
-    JButton btnAktion;
-    Spielfeld spielfeld;
-    Drache drache;
-    Ritter ritter;
-    boolean turnRitter;
-    boolean spielzugAktiv;
+    // Instanzvariablen
+    JPanel panelRight, panelDragon, panelKnight, panelInformation, panelAction;
+    JLabel txtKnightPoints, txtDragonPoints, txtInformation, txtResult;
+    JButton btnAction;
+    Matchfield matchfield;
+    Dragon dragon;
+    Knight knight;
+    boolean turnKnight, turnActive;
     int diceResult;
-    ArrayList<Object> kacheln;
+    ArrayList<Field> fields;
 
+    // Konstruktor
     public GUI() {
-        // Turn
-        turnRitter = true;
+        // speichert den Spieler, welcher an der Reihe ist
+        turnKnight = true;
 
-        // Spielzug
-        spielzugAktiv = false;
+        // speichert, ob ein Zug gemacht werden darf bzw. muss
+        turnActive = false;
 
-        // Spielfeld
-        spielfeld = new Spielfeld();
-        kacheln = spielfeld.getKacheln();
-        for (int i = 0; i < kacheln.size(); i++) {
-            Kachel akt = (Kachel) kacheln.get(i);
-            akt.addActionListener(this);
+        // erzeugt das Spielfeld
+        matchfield = new Matchfield();
+
+        // weist jedem Feld im Spielfeld den ActionListener der Klasse GUI zu
+        fields = matchfield.getFields();
+        for (Field field : fields) {
+            field.addActionListener(this);
         }
 
-        // Ritter
-        ritter = new Ritter();
-        ritter.setAktKachel((Kachel) kacheln.get(0));
+        // erzeugt einen Ritter und setzt die aktuelle Position
+        knight = new Knight();
+        knight.setCurrentField(fields.get(0));
 
-        // Drache
-        drache = new Drache();
-        drache.setAktKachel((Kachel) kacheln.get(48));
+        // erzeugt einen Drachen und setzt die aktuelle Position
+        dragon = new Dragon();
+        dragon.setCurrentField(fields.get(48));
 
-        // JPanels für die einzelnen Elemente der rechten Seite erzeugen
-        panelRechteSeite = new JPanel();
-        panelDrache = new JPanel();
-        panelRitter = new JPanel();
-        panelInformationen = new JPanel();
-        panelAktion = new JPanel();
+        // erzeugen der JPanels für die einzelnen Elemente der rechten Seite
+        panelRight = new JPanel();
+        panelDragon = new JPanel();
+        panelKnight = new JPanel();
+        panelInformation = new JPanel();
+        panelAction = new JPanel();
 
-        // JTextField für die Spielstärke des Ritters und Drachen
-        txtRitterPunkte = new JLabel("Spielstärke: " + ritter.getSpielstaerke());
-        txtDrachePunkte = new JLabel("Spielstärke: " + drache.getSpielstaerke());
+        // erzeugen der JTextFields für die Spielstärke des Ritters und des Drachens
+        txtKnightPoints = new JLabel("Spielstärke: " + knight.getStrength());
+        txtDragonPoints = new JLabel("Spielstärke: " + dragon.getStrength());
 
-        // Würfeln-Button
-        btnAktion = new JButton("Würfeln");
-        btnAktion.addActionListener(this);
+        // erzeugen des Würfeln-Buttons und Zuweisung des ActionListeners
+        btnAction = new JButton("Würfeln");
+        btnAction.addActionListener(this);
 
-        // JTextField für die Anzeige der Informationen
-        txtInformationen = new JLabel("Der Ritter ist dran!");
+        // erzeugen des JTextFields für die Anzeige der Informationen
+        txtInformation = new JLabel("Der Ritter ist dran!");
 
-        // JTextField für die Anzeige des Würfelergebnisses
-        txtErgebnis = new JLabel("Ergebnis: -");
+        // erzeugen des JTextFields für die Anzeige des Würfelergebnisses
+        txtResult = new JLabel("Ergebnis: -");
 
-        // JPanel für die Spielstärke des Ritters
-        panelRitter.setLayout(new BorderLayout());
-        panelRitter.setPreferredSize(new Dimension(300,100));
-        panelRitter.setBorder(new TitledBorder("Ritter"));
-        panelRitter.add(txtRitterPunkte);
+        // JPanel für die Spielstärke des Ritters konfigurieren
+        panelKnight.setLayout(new BorderLayout());
+        panelKnight.setPreferredSize(new Dimension(300,100));
+        panelKnight.setBorder(new TitledBorder("Ritter"));
+        panelKnight.add(txtKnightPoints);
 
-        // JPanel für die Spielstärke des Drachens
-        panelDrache.setLayout(new BorderLayout());
-        panelDrache.setPreferredSize(new Dimension(300,100));
-        panelDrache.setBorder(new TitledBorder("Drache"));
-        panelDrache.add(txtDrachePunkte);
+        // JPanel für die Spielstärke des Drachens konfigurieren
+        panelDragon.setLayout(new BorderLayout());
+        panelDragon.setPreferredSize(new Dimension(300,100));
+        panelDragon.setBorder(new TitledBorder("Drache"));
+        panelDragon.add(txtDragonPoints);
 
-        // JPanel für die Informationen
-        panelInformationen.setLayout(new BorderLayout());
-        panelInformationen.setPreferredSize(new Dimension(300,350));
-        panelInformationen.setBorder(new TitledBorder("Informationen"));
-        panelInformationen.add(txtInformationen);
+        // JPanel für die Informationen konfigurieren
+        panelInformation.setLayout(new BorderLayout());
+        panelInformation.setPreferredSize(new Dimension(300,350));
+        panelInformation.setBorder(new TitledBorder("Informationen"));
+        panelInformation.add(txtInformation);
 
-        // JPanel für die Aktionen
-        panelAktion.setLayout(new BorderLayout());
-        panelAktion.setPreferredSize(new Dimension(300,100));
-        panelAktion.setBorder(new TitledBorder("Aktion"));
-        panelAktion.add(btnAktion, BorderLayout.PAGE_START);
-        panelAktion.add(txtErgebnis, BorderLayout.PAGE_END);
+        // JPanel für die Aktionen konfigurieren
+        panelAction.setLayout(new BorderLayout());
+        panelAction.setPreferredSize(new Dimension(300,100));
+        panelAction.setBorder(new TitledBorder("Aktion"));
+        panelAction.add(btnAction, BorderLayout.PAGE_START);
+        panelAction.add(txtResult, BorderLayout.PAGE_END);
 
-        panelRechteSeite.setPreferredSize(new Dimension(300, 750));
-        panelRechteSeite.add(panelRitter);
-        panelRechteSeite.add(panelDrache);
-        panelRechteSeite.add(panelInformationen);
-        panelRechteSeite.add(panelAktion);
+        // weist die einzelnen Elemente der rechten Seite zu
+        panelRight.setPreferredSize(new Dimension(300, 750));
+        panelRight.add(panelKnight);
+        panelRight.add(panelDragon);
+        panelRight.add(panelInformation);
+        panelRight.add(panelAction);
 
+        // weist dem JFrame das Spielfeld und die rechte Seite zu
         this.setLayout(new BorderLayout());
-        this.add(spielfeld, BorderLayout.WEST);
-        this.add(panelRechteSeite, BorderLayout.EAST);
+        this.add(matchfield, BorderLayout.WEST);
+        this.add(panelRight, BorderLayout.EAST);
     }
 
-    public void changeStrength(Kachel kachel) {
-        if (turnRitter) {
-            if (kachel.getBackground() == Color.RED) {
-                this.ritter.spielstaerkeVerringern();
-            }
-            else if (kachel.getBackground() == Color.GREEN) {
-                this.ritter.spielstaerkeErhoehen();
-            }
-            this.txtRitterPunkte.setText("Spielstärke: " + ritter.getSpielstaerke());
-        }
-        else {
-            if (kachel.getBackground() == Color.RED) {
-                this.drache.spielstaerkeErhoehen();
-            }
-            else if (kachel.getBackground() == Color.GREEN) {
-                this.drache.spielstaerkeVerringern();
-            }
-            this.txtDrachePunkte.setText("Spielstärke: " + drache.getSpielstaerke());
-        }
-    }
-
-    public void setPlayer(Kachel kachel) {
-        if (turnRitter) {
-            for (int i = 0; i < kacheln.size(); i++) {
-                Kachel temp = (Kachel) kacheln.get(i);
-                if (Objects.equals(temp.getText(), "R")) {
-                    temp.setText("");
-                }
-            }
-            kachel.setRitter();
-            ritter.setAktKachel(kachel);
-            txtInformationen.setText("Der Drache ist dran!");
-        }
-        else {
-            for (int i = 0; i < kacheln.size(); i++) {
-                Kachel temp = (Kachel) kacheln.get(i);
-                if (Objects.equals(temp.getText(), "D")) {
-                    temp.setText("");
-                }
-            }
-            kachel.setDrache();
-            drache.setAktKachel(kachel);
-            txtInformationen.setText("Der Ritter ist dran!");
-        }
-    }
-
-    public void makeMove(Kachel kachel) {
-        if (checkStep(kachel)) {
-            setPlayer(kachel);
-            changeStrength(kachel);
-            if (ritter.getAktKachel() == drache.getAktKachel()) {
-                endGame(kachel);
+    // Methode prüft, ob das ausgewählte neue Feld ein valider Schritt des Spielers ist
+    public void makeMove(Field field) {
+        // prüft, ob Schritt valide ist
+        if (checkStep(field)) {
+            setPlayer(field);
+            changeStrength(field);
+            // prüft, ob Ritter und Drache auf einem Feld stehen
+            if (knight.getCurrentField() == dragon.getCurrentField()) {
+                endGame(field);
             }
             else {
-                this.btnAktion.setEnabled(true);
-                this.txtErgebnis.setText("Ergebnis: -");
-                this.spielzugAktiv = false;
-                this.turnRitter = !turnRitter;
+                // Wechsel des Spielers und Vorbereitung eines neuen Zuges
+                this.btnAction.setEnabled(true);
+                this.txtResult.setText("Ergebnis: -");
+                this.turnActive = false;
+                this.turnKnight = !turnKnight;
             }
         }
         else {
-            txtInformationen.setText("Feld nicht auswählbar!");
+            // wenn Feld nicht valide ist, wird ein Hinweis angezeigt
+            txtInformation.setText("Feld nicht auswählbar!");
         }
     }
 
-    private void endGame(Kachel kachel) {
-        kachel.setText("X");
-        txtErgebnis.setText("Ergebnis: -");
-        if (ritter.getSpielstaerke() > drache.getSpielstaerke()) {
-            txtInformationen.setText("Der Ritter gewinnt!");
-        }
-        else if (ritter.getSpielstaerke() < drache.getSpielstaerke()) {
-            txtInformationen.setText("Der Drache gewinnt!");
-        }
-        else {
-            txtInformationen.setText("Das Spiel endet unentschieden!");
-        }
-    }
-
+    // Methode generiert eine zufällige Zahl zwischen 1 und 3, als Würfelzahl
     public void rollTheDice() {
-        this.btnAktion.setEnabled(false);
+        // deaktiviert den Würfel-Button, wenn gewürfelt wurde
+        this.btnAction.setEnabled(false);
+        // generiert gewürfelte Zahl
         this.diceResult = ThreadLocalRandom.current().nextInt(1, 3 + 1);
-        this.txtErgebnis.setText("Ergebnis: " + diceResult);
-        this.spielzugAktiv = true;
+        // zeigt die gewürfelte Zahl an
+        this.txtResult.setText("Ergebnis: " + diceResult);
+        // aktiviert die Möglichkeit, ein neues Feld zu wählen
+        this.turnActive = true;
     }
 
-    public boolean checkStep(Kachel kachel) {
-        Kachel aktKachelRitter = ritter.getAktKachel();
-        Kachel aktKachelDrache = drache.getAktKachel();
-        if (turnRitter) {
-            if (kachel != aktKachelRitter && kachel != kacheln.get(0) && kachel != kacheln.get(48)) {
-                if ((kachel.getXvalue() > aktKachelRitter.getXvalue()+diceResult) || (kachel.getXvalue() < aktKachelRitter.getXvalue()-diceResult)) {
+    // Methode prüft, ob das neue Feld im validen Radius des aktuellen Feldes liegt
+    public boolean checkStep(Field field) {
+        // Speichert die aktuellen Felder der Spieler zwischen
+        Field currentFieldKnight = knight.getCurrentField();
+        Field currentFieldDragon = dragon.getCurrentField();
+
+        if (turnKnight) {
+            // prüft, ob das neue Feld nicht das aktuelle Feld des Spielers oder die initialen Felder sind
+            if (field != currentFieldKnight && field != fields.get(0) && field != fields.get(48)) {
+                // prüft, ob der Schritt auf der x-Achse valide ist
+                if ((field.getXvalue() > currentFieldKnight.getXvalue() + diceResult) || (field.getXvalue() < currentFieldKnight.getXvalue() - diceResult)) {
                     return false;
-                }
-                else return (kachel.getYvalue() <= aktKachelRitter.getYvalue() + diceResult) && (kachel.getYvalue() >= aktKachelRitter.getYvalue() - diceResult);
+                // prüft, ob der Schritt auf der y-Achse valide ist
+                } else
+                    return (field.getYvalue() <= currentFieldKnight.getYvalue() + diceResult) && (field.getYvalue() >= currentFieldKnight.getYvalue() - diceResult);
             }
         }
         else {
-            if (kachel != aktKachelDrache && kachel != kacheln.get(0) && kachel != kacheln.get(48)) {
-                if ((kachel.getXvalue() > aktKachelDrache.getXvalue()+diceResult) || (kachel.getXvalue() < aktKachelDrache.getXvalue()-diceResult)) {
+            // prüft, ob das neue Feld nicht das aktuelle Feld des Spielers oder die initialen Felder sind
+            if (field != currentFieldDragon && field != fields.get(0) && field != fields.get(48)) {
+                // prüft, ob der Schritt auf der x-Achse valide ist
+                if ((field.getXvalue() > currentFieldDragon.getXvalue() + diceResult) || (field.getXvalue() < currentFieldDragon.getXvalue() - diceResult)) {
                     return false;
-                }
-                else return (kachel.getYvalue() <= aktKachelDrache.getYvalue() + diceResult) && (kachel.getYvalue() >= aktKachelDrache.getYvalue() - diceResult);
+                // prüft, ob der Schritt auf der y-Achse valide ist
+                } else
+                    return (field.getYvalue() <= currentFieldDragon.getYvalue() + diceResult) && (field.getYvalue() >= currentFieldDragon.getYvalue() - diceResult);
             }
         }
+        // gibt false zurück, wenn der Schritt nicht valide ist
         return false;
     }
 
+    // Methode ändert die Spielstärke, je nachdem auf welchen Landschaftstyp ein Spieler gesetzt wurde
+    public void changeStrength(Field field) {
+        if (turnKnight) {
+            // prüft, welcher Landschaftstyp besetzt wurde
+            if (field.getBackground() == Color.RED) {
+                this.knight.reduceStrength();
+            }
+            else if (field.getBackground() == Color.GREEN) {
+                this.knight.increaseStrength();
+            }
+            // zeigt die aktualisierte Spielstärke an
+            this.txtKnightPoints.setText("Spielstärke: " + knight.getStrength());
+        }
+        else {
+            // prüft, welcher Landschaftstyp besetzt wurde
+            if (field.getBackground() == Color.RED) {
+                this.dragon.increaseStrength();
+            }
+            else if (field.getBackground() == Color.GREEN) {
+                this.dragon.reduceStrength();
+            }
+            // zeigt die aktualisierte Spielstärke an
+            this.txtDragonPoints.setText("Spielstärke: " + dragon.getStrength());
+        }
+    }
 
+    // Methode setzt einen Spieler auf ein anderes Feld, wenn das neue Feld im validen Radius liegt
+    public void setPlayer(Field field) {
+        if (turnKnight) {
+            // entfernt das alte Symbol
+            knight.getCurrentField().setText("");
+            // setzt den Spieler auf das neue Feld
+            field.setKnight();
+            knight.setCurrentField(field);
+            txtInformation.setText("Der Drache ist dran!");
+        }
+        else {
+            // entfernt das alte Symbol
+            dragon.getCurrentField().setText("");
+            // setzt den Spieler auf das neue Feld
+            field.setDragon();
+            dragon.setCurrentField(field);
+            txtInformation.setText("Der Ritter ist dran!");
+        }
+    }
+
+    // Methode verwaltet das Spielende
+    private void endGame(Field field) {
+        // setzt das Feld, auf welchem sich beide Symbole treffen, auf ein X
+        field.setText("X");
+        // setzt das Ergebnis auf den Startwert
+        txtResult.setText("Ergebnis: -");
+        // prüft, welcher Spieler die höhere Spielstärke hat und gibt den Sieger bzw. ein Unentschieden aus
+        if (knight.getStrength() > dragon.getStrength()) {
+            txtInformation.setText("Der Ritter gewinnt!");
+        }
+        else if (knight.getStrength() < dragon.getStrength()) {
+            txtInformation.setText("Der Drache gewinnt!");
+        }
+        else {
+            txtInformation.setText("Das Spiel endet unentschieden!");
+        }
+    }
+
+    // ActionListener
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == btnAktion) {
+        // prüft, ob gewürfelt werden soll
+        if (e.getSource() == btnAction) {
             rollTheDice();
         }
 
-        if (spielzugAktiv) {
-            for (int i = 0; i < kacheln.size(); i++) {
-                if (e.getSource() == kacheln.get(i)) {
-                    Kachel temp = (Kachel) kacheln.get(i);
-                    makeMove(temp);
+        // startet das Setzen eines Spielers, wenn gewürfelt wurde
+        if (turnActive) {
+            for (Field field : fields) {
+                if (e.getSource() == field) {
+                    makeMove(field);
                 }
             }
         }
